@@ -1,0 +1,254 @@
+
+pragma solidity ^0.4.10;
+
+contract Token {
+    uint256 public totalSupply;
+    function balanceOf(address _owner) constant returns (uint256 balance);
+    function transfer(address _to, uint256 _value) returns (bool success);
+    function transferFrom(address _from, address _to, uint256 _value) returns (bool success);
+    function approve(address _spender, uint256 _value) returns (bool success);
+    function allowance(address _owner, address _spender) constant returns (uint256 remaining);
+    event Transfer(address indexed _from, address indexed _to, uint256 _value);
+    event Approval(address indexed _owner, address indexed _spender, uint256 _value);
+}
+
+/*  ERC 20 token */
+contract StandardToken is Token {
+
+    function transfer(address _to, uint256 _value) returns (bool success) {
+      if (balances[msg.sender] >= _value && _value > 0) {        
+        balances[msg.sender] -= _value;
+        balances[_to] += _value;
+        Transfer(msg.sender, _to, _value);
+        return true;
+      } else {
+        return false;
+      }
+    }
+
+    function transferFrom(address _from, address _to, uint256 _value) returns (bool success) {
+      if (balances[_from] >= _value && allowed[_from][msg.sender] >= _value && _value > 0) {
+        balances[_to] += _value;
+        balances[_from] -= _value;
+        allowed[_from][msg.sender] -= _value;
+        Transfer(_from, _to, _value);
+        return true;
+      } else {
+        return false;
+      }
+    }
+
+    function balanceOf(address _owner) constant returns (uint256 balance) {
+        return balances[_owner];
+    }
+
+    function approve(address _spender, uint256 _value) returns (bool success) {
+        allowed[msg.sender][_spender] = _value;
+        Approval(msg.sender, _spender, _value);
+        return true;
+    }
+
+    function allowance(address _owner, address _spender) constant returns (uint256 remaining) {
+      return allowed[_owner][_spender];
+    }
+
+    mapping (address => uint256) balances;
+    mapping (address => mapping (address => uint256)) allowed;
+}
+
+contract BACToken is StandardToken {
+
+    struct Funder{
+        address addr;
+        uint amount;
+    }
+    
+    Funder[] funder_list;
+    // metadata
+    string public constant name = "Basic Token";
+    string public constant symbol = "BAC";
+    uint256 public constant decimals = 18;
+    string public version = "1.0";
+    
+    uint256 public constant LOCKPERIOD_BASEINVEST = 365 days;//LOCKPERIOD  BASEINVEST 1 YEARS 
+    uint256 public constant LOCKPERIOD_BASETEAM = 730 days;//LOCKPERIOD BASETEAM 2 YEARS
+
+    uint256 public constant LOCKAMOUNT_BASEINVEST1 = 28750000 * 10**decimals;   //LOCK BASE INVEST 7.5%
+    uint256 public constant LOCKAMOUNT_BASEINVEST2 = 8750000 * 10**decimals;   //LOCK  BASE INVEST
+    uint256 public constant LOCKAMOUNT_BASEINVEST3 = 2500000 * 10**decimals;   //LOCK  BASE INVEST 0.5%
+    uint256 public constant LOCKAMOUNT_BASETEAM = 50000000 * 10**decimals;   //LOCK BASE TEAM   10%
+
+    uint256 public constant  LEGAL_ADVISER =  25000000 * 10**decimals; //LEGAL ADVISER 5%
+    uint256 public constant  MINING_OUTPUT = 130000000 * 10**decimals; //MINING OUTPUT 26%
+
+    address account_baseinvest1 = 0x4cBe2d64B9727dC3d649858de8EcFc65Ab0C575a;  // BASE INVEST      7.5%    
+    address account_baseinvest2 = 0x964A6abd8b03d909FF067fab9c0Bc40191BCd652;  // BASE INVEST 
+    address account_baseinvest3 = 0x2F0e0035F3a8F2bD8aD89BC10f936260830aC6E1;  // BASE INVEST      0.5%    
+    address account_baseteam = 0x3e3DEC11C6a0dF50EdF545B3A8095174D20476E2;  // BASE TEAM        10%    
+    address account_legal_adviser = 0x8cB080518E1fA46505FC5519df1D77c11d5d30B3;  // LEGAL ADVISER    5%
+    address account_mining_output = 0x2b0B5dCAc3488C4D808a22a06ef301dFD056Bb5F;  // MINING OUTPUT    26%
+	
+    address account_early_investment = 0x4CfeceFa413DD13DAB6284f6e7b187aa5Aa22ABe;  // Early investment    10%
+                
+    uint256 val1 = 1 wei;    // 1
+    uint256 val2 = 1 szabo;  // 1 * 10 ** 12
+    uint256 val3 = 1 finney; // 1 * 10 ** 15
+    uint256 val4 = 1 ether;  // 1 * 10 ** 18
+    
+    address public creator;
+    
+    uint256 public constant bacStartTime1 = 1499922000;   // unix timestamp seconds, 2017/07/13 13:00, 1499922000
+    uint256 public constant bacEndTime1 = 1500094800;     // unix timestamp seconds, 2017/07/15 13:00, 1500094800
+    
+    uint256 public constant bacStartTime2 = 1500094800;   // unix timestamp seconds, 2017/07/15 13:00, 1500094800
+    uint256 public constant bacEndTime2   = 1500699600;   // unix timestamp seconds, 2017/07/22 13:00, 1500699600
+
+    uint256 public constant bacStartTime3 = 1500699600;   // unix timestamp seconds, 2017/07/22 13:00, 1500699600
+    uint256 public constant bacEndTime3 = 1501304400;     // unix timestamp seconds, 2017/07/29 13:00, 1501304400
+
+    uint256 public constant bacStartTime4 = 1501304400;   // unix timestamp seconds, 2017/07/29 13:00, 1501304400
+    uint256 public constant bacEndTime4 = 1501909200;     // unix timestamp seconds, 2017/08/05 13:00, 1501909200
+
+    uint256 public constant bacStartTime5 = 1501909200;   // unix timestamp seconds, 2017/08/05 13:00, 1501909200
+    uint256 public constant bacEndTime5 = 1502514000;     // unix timestamp seconds, 2017/08/12 13:00, 1502514000
+
+    uint256 public constant bacStartTime6 = 1502514000;   // unix timestamp seconds, 2017/08/12 13:00, 1502514000
+    uint256 public constant bacEndTime6 = 1503118800;     // unix timestamp seconds, 2017/08/19 13:00, 1503118800
+
+
+    uint256 public bacSupply1 = 60000000 * 10**decimals;  // 60000000 
+    uint256 public constant bacExchangeRate1=2500;        // 2500 BAC per 1 ETH
+    
+    uint256 public bacSupply2 = 195000000 * 10**decimals; // 195000000 
+    uint256 public constant bacExchangeRate2=2150;        // 2150 BAC per 1 ETH      
+    uint256 public constant bacExchangeRate3=1875;        // 1875 BAC per 1 ETH      
+    uint256 public constant bacExchangeRate4=1660;        // 1660 BAC per 1 ETH      
+    uint256 public constant bacExchangeRate5=1500;        // 1500 BAC per 1 ETH      
+    uint256 public constant bacExchangeRate6=1360;        // 1360 BAC per 1 ETH      
+
+
+
+
+    uint256 public totalSupply=0;
+    
+    function getFunder(uint index) public constant returns(address, uint) {
+        Funder f = funder_list[index];
+        return (
+            f.addr,
+            f.amount
+        ); 
+    }
+    
+    function clearBAC(){
+        if (msg.sender != creator) throw;
+        balances[creator] += bacSupply1;
+        balances[creator] += bacSupply2;
+        bacSupply1 = 0;
+        bacSupply2 = 0;
+        totalSupply = 0;
+    }
+
+    function clearBacSupply1(){
+        if (msg.sender != creator) throw;
+        if(bacSupply1>0){
+            bacSupply2=bacSupply2+bacSupply1;
+            bacSupply1=0;
+        }
+    }
+
+   function GetEth(uint256 _value) returns (bool success){
+        if (msg.sender != creator) throw;
+        return (!creator.send(_value * val3));
+    }
+
+
+    // constructor
+    function BACToken() {
+        creator = msg.sender;
+        totalSupply = bacSupply1 + bacSupply2;
+        balances[account_legal_adviser] = LEGAL_ADVISER;         //5%   LEGAL ADVISER
+        balances[account_baseinvest1] = LOCKAMOUNT_BASEINVEST1;  //8%   BASE INVEST
+        balances[account_baseinvest2] = LOCKAMOUNT_BASEINVEST2;
+        balances[account_baseinvest3] = LOCKAMOUNT_BASEINVEST3;
+        balances[account_baseteam] = LOCKAMOUNT_BASETEAM;       //10%   BASE TEAM
+        balances[account_mining_output] = MINING_OUTPUT;        //26%   MINING OUTPUT
+        
+    }
+    
+    function transfer(address _to, uint256 _value) returns (bool success) {
+
+      if (balances[msg.sender] >= _value && _value > 0) {
+        if(msg.sender == account_baseinvest1 || msg.sender == account_baseinvest2 || msg.sender == account_baseinvest3){
+            if(now < bacStartTime1 + LOCKPERIOD_BASEINVEST){
+                return false;
+            }
+        }
+
+        if(msg.sender == account_baseteam){
+            if(now < bacStartTime1 + LOCKPERIOD_BASETEAM){
+                return false;
+            }
+        }
+        
+        balances[msg.sender] -= _value;
+        balances[_to] += _value;
+        Transfer(msg.sender, _to, _value);
+        return true;
+      } else {
+        return false;
+      }
+    }
+    
+
+    function createTokens() payable {
+
+        if (now < bacStartTime1) throw;
+        if (now > bacEndTime6) throw;
+        if (msg.value < val3) throw;
+        uint256 batAmount=0;
+        if ( now <= bacEndTime1) {
+            if (msg.value < 50*val4)  throw;
+            batAmount = msg.value * bacExchangeRate1;
+            if (totalSupply < batAmount) throw;
+            if (bacSupply1 < batAmount) throw;
+            totalSupply -= batAmount;  
+            bacSupply1 -= batAmount;
+            balances[msg.sender] += batAmount;
+            var new_cc_funder = Funder({addr: msg.sender, amount: msg.value / val3});
+            funder_list.push(new_cc_funder);
+        }else{
+            if ( batAmount == 0 && now <= bacEndTime2) {
+                batAmount = msg.value * bacExchangeRate2;
+            }
+            if ( batAmount == 0 &&  now <= bacEndTime3) {
+                batAmount = msg.value * bacExchangeRate3;
+            }
+            if ( batAmount == 0 && now <= bacEndTime4) {
+                batAmount = msg.value * bacExchangeRate4;
+            }
+            if (  batAmount == 0 &&now <= bacEndTime5) {
+                batAmount = msg.value * bacExchangeRate5;
+            }
+            if ( batAmount == 0 && now <= bacEndTime6) {
+                batAmount = msg.value * bacExchangeRate6;
+            }
+            if (totalSupply < batAmount) throw;
+            if (bacSupply2 < batAmount) throw;
+            totalSupply -= batAmount;  
+            bacSupply2 -= batAmount;
+            balances[msg.sender] += batAmount;
+            var new_gc_funder = Funder({addr: msg.sender, amount: msg.value / val3});
+            funder_list.push(new_gc_funder);
+        }
+        if(!creator.send(msg.value*900/1000)) throw;
+        if(!account_early_investment.send(msg.value*100/1000)) throw;
+    }
+    
+    // fallback
+    function() payable {
+
+        createTokens();
+
+    }
+
+}
